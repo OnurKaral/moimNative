@@ -35,7 +35,7 @@ fun MyApp() {
     val params = WebViewParams(token = "tokenValue", msisdn = "msisdnValue")
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         Scaffold(
         ) {
