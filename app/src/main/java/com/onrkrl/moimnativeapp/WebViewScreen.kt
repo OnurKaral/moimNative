@@ -1,13 +1,28 @@
 import android.annotation.SuppressLint
+import android.content.Context
 import android.webkit.*
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.platform.LocalContext
 import com.onrkrl.moimnativeapp.WebViewParams
+
+class WebAppInterface(private val context: Context) {
+    @JavascriptInterface
+    fun flutterWebViewCallback(action: String) {
+        when (action) {
+            "close" -> {
+                println("🤖 Close Action Triggered: $action")
+            }
+        }
+    }
+}
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun WebViewScreen(baseURL: String, params: WebViewParams) {
+    val context = LocalContext.current
+
     AndroidView(
         modifier = androidx.compose.ui.Modifier.fillMaxSize(),
         factory = { context ->
@@ -32,6 +47,9 @@ fun WebViewScreen(baseURL: String, params: WebViewParams) {
                 // ✅ Enable WebView debugging for development
                 WebView.setWebContentsDebuggingEnabled(true)
 
+                // ✅ Add JavaScript interface
+                addJavascriptInterface(WebAppInterface(context), "Android")
+
                 // ✅ WebViewClient for page handling
                 webViewClient = object : WebViewClient() {
                     override fun onPageFinished(view: WebView?, url: String?) {
@@ -43,6 +61,11 @@ fun WebViewScreen(baseURL: String, params: WebViewParams) {
                             (function() {
                                 window.token = '${escapeJavaScriptString(params.token)}';
                                 window.msisdn = '${escapeJavaScriptString(params.msisdn)}';
+                                
+                                // Inject flutterWebViewCallback function
+                                window.flutterWebViewCallback = function(action) {
+                                    Android.flutterWebViewCallback(action);
+                                }
                             })();
                         """.trimIndent()
 
@@ -90,9 +113,6 @@ fun WebViewScreen(baseURL: String, params: WebViewParams) {
     )
 }
 
-/**
- * Escape JavaScript String to prevent injection attacks
- */
 fun escapeJavaScriptString(input: String?): String {
     return input?.replace("'", "\\'")?.replace("\n", "\\n") ?: ""
 }
